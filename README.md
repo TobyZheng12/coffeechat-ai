@@ -2,6 +2,8 @@
 
 **Your personal networking copilot.** Prepare for informational interviews, remember every conversation, and follow up at the right moment, so professional relationships last.
 
+**[Try the live demo →](https://coffeechat-ai-six.vercel.app/demo)** (fictional data, no sign-up)
+
 ![Interview script view](docs/screenshots/script-light.png)
 
 > Built by Toby Zheng, a Global Supply Chain Management student at BYU, as a tool I use myself and as a portfolio project. The public demo uses **only fictional people and companies**.
