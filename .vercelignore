@@ -1,0 +1,9 @@
+# Never upload local secrets or your local-mode data.
+.env*
+!.env.example
+.data
+.next
+.next-e2e
+node_modules
+test-results
+playwright-report
