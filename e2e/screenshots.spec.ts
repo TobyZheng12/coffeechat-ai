@@ -7,6 +7,7 @@ import { expect, test } from "@playwright/test";
 test.skip(!process.env.SCREENSHOTS, "Set SCREENSHOTS=1 to regenerate docs/screenshots");
 
 test.use({ viewport: { width: 1360, height: 860 }, deviceScaleFactor: 2 });
+test.setTimeout(240_000);
 
 for (const scheme of ["light", "dark"] as const) {
   test(`capture demo screenshots (${scheme})`, async ({ page }) => {
@@ -45,5 +46,17 @@ for (const scheme of ["light", "dark"] as const) {
     await page.getByRole("link", { name: /Maya Patel/ }).click();
     await page.getByRole("heading", { name: "Relationship timeline" }).scrollIntoViewIfNeeded();
     await shot("contact");
+
+    await page.goto("/app/knowledge");
+    await page.getByRole("button", { name: "Which contacts recommended case interviews?" }).click();
+    await expect(page.getByText("Sources", { exact: true })).toBeVisible();
+    await shot("knowledge");
+
+    await page.goto("/app/playbook");
+    await shot("playbook");
+
+    await page.goto("/app/companies");
+    await page.getByRole("link", { name: /Northwind Consulting/ }).click();
+    await shot("company");
   });
 }

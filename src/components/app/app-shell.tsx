@@ -1,6 +1,6 @@
 "use client";
 
-import { BellRing, Coffee, LayoutDashboard, LogOut, Menu, Plus, Settings, Users, X } from "lucide-react";
+import { BellRing, BookOpenText, Building2, Coffee, LayoutDashboard, Lightbulb, LogOut, Menu, Plus, Settings, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -14,7 +14,10 @@ type Mode = "supabase" | "local" | "demo";
 const NAV = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/app/contacts", label: "Contacts", icon: Users },
+  { href: "/app/companies", label: "Companies", icon: Building2 },
   { href: "/app/follow-ups", label: "Follow-ups", icon: BellRing, badge: true },
+  { href: "/app/knowledge", label: "Knowledge base", icon: Lightbulb },
+  { href: "/app/playbook", label: "Playbook", icon: BookOpenText },
   { href: "/app/settings", label: "Profile & timeline", icon: Settings },
 ];
 

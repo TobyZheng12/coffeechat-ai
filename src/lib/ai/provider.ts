@@ -6,6 +6,8 @@ export interface AIProvider {
   /** True when no external model is called (offline demo templates). */
   readonly offline: boolean;
   run<K extends AITaskKind>(kind: K, input: AITaskMap[K]["input"]): Promise<AITaskMap[K]["output"]>;
+  /** Reads the text in a screenshot. Only available with a real model. */
+  transcribeImage?(base64: string, mediaType: "image/png" | "image/jpeg" | "image/webp"): Promise<string>;
 }
 
 export type AIErrorCode =

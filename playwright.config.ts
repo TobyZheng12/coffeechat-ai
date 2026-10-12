@@ -12,7 +12,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
-  timeout: 60_000,
+  timeout: 90_000,
+  expect: { timeout: 15_000 },
   reporter: process.env.CI ? "github" : "list",
   globalSetup: "./e2e/global-setup.ts",
   use: {
@@ -21,8 +22,10 @@ export default defineConfig({
     timezoneId: "America/Denver",
   },
   projects: [
+    { name: "warmup", testMatch: /warmup\.setup\.ts/, use: { channel: process.env.CI ? undefined : "chrome" } },
     {
       name: "chromium",
+      dependencies: ["warmup"],
       // Uses installed Google Chrome locally; CI installs Playwright's Chromium.
       use: { ...devices["Desktop Chrome"], channel: process.env.CI ? undefined : "chrome" },
     },

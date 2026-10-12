@@ -34,12 +34,18 @@ Months later, the details are gone, and so is the relationship. CoffeeChat AI ha
 | **Follow-up emails** | Thank-you notes, LinkedIn messages, reconnection, advice updates, and post-mission notes, in **Professional / Friendly / Brief** tones, built only from your real notes. Drafts are never sent automatically, and copying a draft never marks it sent. Only an explicit **Mark as sent** (with confirmation) does. |
 | **Relationship memory** | Every contact has a timeline: added, outreach, reply, meeting, thank-you sent, upcoming follow-ups. Search covers names, companies, roles, tags, and meeting notes. |
 | **Timeline-aware** | Set an upcoming commitment, such as a two-year service mission. Reminders are moved out of that window, an optional pre-departure note is suggested only for relationships with substance, and **a return date is never assumed**. You choose whether it's ever mentioned in scripts. |
+| **Knowledge base** | Ask your own notes: *"What have consultants told me about recruiting?"*, *"Who have I spoken with at Deloitte?"*. Retrieval ranks your saved advice, notes, summaries, and contacts; the AI answers **only** from those snippets and every answer links back to the conversation it came from. Invented citations are discarded. Advice is also browsable by topic. |
+| **Import profiles** | Upload LinkedIn's "Save to PDF" export (text is extracted on the server, no AI needed) or a profile screenshot (read by Claude). You review the text before anything is saved. Files are identified by their bytes, not their names. |
+| **Company pages** | Everyone you know at a company, including people who *used to* work there, what they told you, open follow-ups, and your own research notes. |
+| **Networking playbook** | *My Pre-Mission Networking Playbook*: open items to finish before you leave, who to reconnect with afterwards (warmest first) and how, recruiting advice, insights by theme, and a page per person. Compiled directly from your records, with **no AI**, so nothing is invented. Download as **PDF** or **Markdown**. |
 | **Dashboard** | Upcoming chats, follow-ups due, recent conversations, your network by company and industry, career-insight themes, and progress before your departure date. |
 | **Public demo** | `/demo` opens an isolated workspace seeded with fictional data. No sign-up required. |
 
 | Dashboard | Live view | Follow-ups |
 |---|---|---|
 | ![](docs/screenshots/dashboard-light.png) | ![](docs/screenshots/live-dark.png) | ![](docs/screenshots/follow-ups-light.png) |
+| **Knowledge base** | **Playbook** | **Company** |
+| ![](docs/screenshots/knowledge-light.png) | ![](docs/screenshots/playbook-dark.png) | ![](docs/screenshots/company-light.png) |
 
 ## 3. Technology
 
@@ -131,6 +137,7 @@ Production runs on **Vercel + Supabase**. Step-by-step guide: [docs/DEPLOYMENT.m
 ## 7. Privacy & security
 
 - **Your data is yours.** Every private table has a `user_id`, and **Row Level Security** limits every query to `auth.uid()`. Child tables use **composite foreign keys** `(parent_id, user_id)`, so a row can't point at another user's record even if someone guesses a UUID. The app *also* filters by `user_id` in every query (defense in depth). This is all verified by tests that run the real migration in Postgres.
+- **Exports and imports are private.** Playbook downloads require a signed-in session, and uploaded files are read in memory and never stored.
 - **The demo is isolated by construction.** Demo workspaces live in memory and the demo code has no database client at all, so it *cannot* read real data. A unit test asserts the demo modules don't import storage or auth, and an E2E test checks that demo data never reaches the private store.
 - **Pasted text is untrusted.** Prompt-injection defenses: fenced inputs, tag stripping, a strict system prompt, schema-constrained outputs, and grounding checks.
 - **No scraping.** LinkedIn URLs are stored for reference only. You paste what you can see, and the app never logs in, crawls, or bypasses LinkedIn's restrictions.
@@ -146,23 +153,23 @@ Production runs on **Vercel + Supabase**. Step-by-step guide: [docs/DEPLOYMENT.m
 | `tests/unit/followup-engine.test.ts` | Every follow-up rule, mission window, spacing, dedupe, dashboard buckets |
 | `tests/unit/ai.test.ts` | Prompt-injection fencing, grounding, schema validation, Claude provider with a mocked API (refusal, truncation, bad output), usage limits |
 | `tests/unit/ownership.test.ts` | No service can read or modify another user's records |
+| `tests/unit/milestone2.test.ts` | Knowledge retrieval and citations (and that invented citations are dropped), no AI call when notes don't cover a question, per-user search; playbook contains only recorded facts; real Markdown and PDF output; PDF/screenshot import and file sniffing; company pages |
 | `tests/unit/demo.test.ts`, `auth.test.ts` | Demo isolation and fictional seed; session token tampering and expiry |
 | `e2e/workflow.spec.ts` | Real browser: sign-in protection, full coffee-chat flow, demo ↔ private isolation |
+| `e2e/milestone2.spec.ts` | Real browser: knowledge base Q&A with sources, company research notes, playbook PDF/Markdown downloads (and that they're private), LinkedIn PDF import |
 
 All AI calls in automated tests are mocked. No test spends API credits.
 
 ## 9. Roadmap
 
-Built so far (Phase 1 plus part of Phase 2): everything above.
+Done: Phase 1 (core workflow) and Phase 2 (relationship intelligence: timeline, follow-up management, search, knowledge base, live companion, company pages, PDF import), plus the playbook export, public demo, and CI from Phase 3.
 
 Next:
 
-- **Networking knowledge base**: ask "What have consultants told me about recruiting?" with answers cited to specific meetings (the AI task and schema exist; retrieval and UI are next).
-- PDF and screenshot import for LinkedIn profiles.
-- Company research notes.
-- **Pre-departure networking playbook** exported to PDF and Markdown.
-- AI conversation practice.
-- Optional email reminders (the follow-up model is already channel-agnostic; this needs a scheduled job such as Vercel Cron).
+- Production deployment of the private app (Supabase project + Anthropic key), so real data lives in Postgres instead of a local file.
+- AI conversation practice: rehearse a coffee chat with a simulated version of the contact, built only from their profile.
+- Optional email reminders (the follow-up model is channel-agnostic; this needs a scheduled job such as Vercel Cron).
+- Postgres full-text search for the knowledge base at larger scale (the `tsvector` indexes already exist).
 - A static shell with Suspense streaming for faster navigation under Cache Components.
 
 ## 10. License

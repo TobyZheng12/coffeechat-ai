@@ -31,6 +31,8 @@ import {
   saveMeetingNotes,
   scheduleMeeting,
 } from "@/lib/services/meetings";
+import { extractProfileText } from "@/lib/services/import";
+import { askKnowledge, type KnowledgeAnswer } from "@/lib/services/knowledge";
 import { saveProfile } from "@/lib/services/profile";
 import {
   addCustomQuestion,
@@ -421,6 +423,31 @@ export async function createFollowUpAction(_prev: ActionResult | null, form: For
       due_date: str(form, "due_date"),
       priority: (str(form, "priority") || "medium") as "medium",
     });
+    return null;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge base, imports, company research
+// ---------------------------------------------------------------------------
+
+export async function askKnowledgeAction(question: string): Promise<ActionResult<KnowledgeAnswer>> {
+  return run((ws) => askKnowledge(ws, question));
+}
+
+/** Extracts text from an uploaded LinkedIn PDF or screenshot. Nothing is stored. */
+export async function importProfileFileAction(form: FormData): Promise<ActionResult<{ text: string; method: string; pages?: number }>> {
+  return run(async (ws) => {
+    const file = form.get("file");
+    if (!(file instanceof File)) throw new ZodError([{ code: "custom", path: ["file"], message: "Choose a file to import.", input: null }]);
+    return extractProfileText(ws, new Uint8Array(await file.arrayBuffer()));
+  });
+}
+
+export async function saveCompanyResearchAction(company: string, notes: string): Promise<ActionResult> {
+  return run(async (ws) => {
+    const name = z.string().trim().min(1).max(200).parse(company);
+    await ws.repo.saveCompanyResearch(name, z.string().max(20000).parse(notes));
     return null;
   });
 }

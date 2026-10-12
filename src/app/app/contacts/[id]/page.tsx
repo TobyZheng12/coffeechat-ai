@@ -65,7 +65,15 @@ export default async function ContactPage({
         title={contact.full_name}
         description={
           <>
-            {[contact.current_position, contact.current_company].filter(Boolean).join(" at ") || "Role not set"}
+            {contact.current_position || "Role not set"}
+            {contact.current_company ? (
+              <>
+                {" at "}
+                <Link href={`/app/companies/${encodeURIComponent(contact.current_company)}`} className="hover:underline">
+                  {contact.current_company}
+                </Link>
+              </>
+            ) : null}
             {contact.location ? ` · ${contact.location}` : ""}
             {safeLinkedIn ? (
               <>

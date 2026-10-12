@@ -1,10 +1,11 @@
 "use client";
 
 import { ChevronDown, Info, Loader2, Sparkles } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { type ActionResult, prepareCoffeeChatAction } from "@/app/app/actions";
 import { DateTimeField } from "@/components/app/datetime-field";
+import { ImportProfileButton } from "@/components/app/import-profile";
 import { Field, FormError, NativeSelect } from "@/components/form";
 import { Panel } from "@/components/page";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 export function PrepareForm({ aiLabel }: { aiLabel: string }) {
   const [state, action] = useActionState<ActionResult | null, FormData>(prepareCoffeeChatAction, null);
   const [separate, setSeparate] = useState(false);
+  const profileBox = useRef<HTMLTextAreaElement>(null);
 
   return (
     <form action={action} className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
@@ -44,14 +46,23 @@ export function PrepareForm({ aiLabel }: { aiLabel: string }) {
             <div>
               <h2 className="text-sm font-semibold">Their LinkedIn profile</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Open their profile, select all (⌘A / Ctrl+A), copy, and paste here. More detail means better questions.
+                Open their profile, select all (⌘A / Ctrl+A), copy, and paste here — or import LinkedIn&apos;s “Save to PDF” export or a
+                screenshot. More detail means better questions.
               </p>
             </div>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setSeparate((s) => !s)}>
-              {separate ? "One box" : "Separate sections"} <ChevronDown className={separate ? "rotate-180" : ""} />
-            </Button>
+            <div className="flex shrink-0 flex-wrap justify-end gap-1">
+              <ImportProfileButton
+                onText={(text) => {
+                  if (profileBox.current) profileBox.current.value = text;
+                }}
+              />
+              <Button type="button" variant="ghost" size="sm" onClick={() => setSeparate((s) => !s)}>
+                {separate ? "One box" : "Separate sections"} <ChevronDown className={separate ? "rotate-180" : ""} />
+              </Button>
+            </div>
           </div>
           <Textarea
+            ref={profileBox}
             name="linkedin_profile_text"
             aria-label="LinkedIn profile text"
             rows={separate ? 6 : 12}

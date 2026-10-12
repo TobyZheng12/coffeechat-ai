@@ -1,6 +1,7 @@
 import type {
   CareerInsight,
   CareerInsightInput,
+  CompanyResearch,
   Contact,
   ContactExperience,
   ContactExperienceInput,
@@ -92,6 +93,10 @@ export interface Repository {
   // Knowledge
   listInsights(opts?: { contactId?: UUID }): Promise<CareerInsight[]>;
   addInsights(items: CareerInsightInput[]): Promise<CareerInsight[]>;
+
+  // Company research (your own notes about a company)
+  getCompanyResearch(companyName: string): Promise<CompanyResearch | null>;
+  saveCompanyResearch(companyName: string, notes: string): Promise<CompanyResearch>;
 
   /** Atomically increments today's AI usage counter and returns the new count. */
   incrementAiUsage(day: string): Promise<number>;

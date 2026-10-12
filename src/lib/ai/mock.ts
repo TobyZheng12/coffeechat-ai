@@ -602,10 +602,18 @@ function mockAnswer(i: AITaskMap["answer_from_notes"]["input"]): KnowledgeAI {
   if (i.sources.length === 0) {
     return { answer: "I couldn't find anything in your saved notes about that yet.", cited_source_ids: [], found_relevant_notes: false };
   }
-  const bullets = i.sources.slice(0, 5).map((s) => `• ${s.label}: ${sentences(s.text)[0] ?? s.text.slice(0, 160)}`);
+  // One line per person, preferring their actual advice over summaries and raw notes.
+  const rank = (label: string) => (/· advice/.test(label) ? 0 : /· notes/.test(label) ? 1 : /· summary/.test(label) ? 2 : 3);
+  const byPerson = new Map<string, (typeof i.sources)[number]>();
+  for (const s of [...i.sources].sort((a, b) => rank(a.label) - rank(b.label))) {
+    const who = s.label.split(" · ")[0];
+    if (!byPerson.has(who)) byPerson.set(who, s);
+  }
+  const picked = [...byPerson.entries()].slice(0, 5);
+  const lines = picked.map(([who, s]) => `• ${who}: ${(sentences(s.text)[0] ?? s.text).replace(/\s*\(topic: [^)]*\)$/, "")}`);
   return {
-    answer: `Here's what your notes say:\n${bullets.join("\n")}`,
-    cited_source_ids: i.sources.slice(0, 5).map((s) => s.id),
+    answer: `From your notes:\n${lines.join("\n")}`,
+    cited_source_ids: picked.map(([, s]) => s.id),
     found_relevant_notes: true,
   };
 }

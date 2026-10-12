@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CareerInsight,
+  CompanyResearch,
   Contact,
   ContactExperience,
   FollowUpTask,
@@ -393,6 +394,27 @@ export class SupabaseRepository implements Repository {
       .select("*");
     this.fail(error, "Contact");
     return (data ?? []) as CareerInsight[];
+  }
+
+  async getCompanyResearch(companyName: string) {
+    const safe = companyName.trim().replace(/[\\%_]/g, (c) => `\\${c}`);
+    const { data, error } = await this.table("company_research")
+      .select("*")
+      .eq("user_id", this.userId)
+      .ilike("company_name", safe)
+      .maybeSingle();
+    this.fail(error, "Company research");
+    return (data as CompanyResearch) ?? null;
+  }
+
+  async saveCompanyResearch(companyName: string, notes: string) {
+    const existing = await this.getCompanyResearch(companyName);
+    const q = existing
+      ? this.table("company_research").update({ notes }).eq("user_id", this.userId).eq("id", existing.id)
+      : this.table("company_research").insert({ company_name: companyName.trim(), notes, user_id: this.userId });
+    const { data, error } = await q.select("*").single();
+    this.fail(error, "Company research");
+    return data as CompanyResearch;
   }
 
   async incrementAiUsage(day: string) {

@@ -1,5 +1,6 @@
 import type {
   CareerInsight,
+  CompanyResearch,
   Contact,
   ContactExperience,
   FollowUpTask,
@@ -34,6 +35,7 @@ export interface MemoryData {
   message_drafts: MessageDraft[];
   interaction_history: Interaction[];
   career_insights: CareerInsight[];
+  company_research: CompanyResearch[];
   ai_usage: { user_id: UUID; day: string; count: number }[];
 }
 
@@ -50,6 +52,7 @@ export function emptyData(): MemoryData {
     message_drafts: [],
     interaction_history: [],
     career_insights: [],
+    company_research: [],
     ai_usage: [],
   };
 }
@@ -486,6 +489,24 @@ export class MemoryRepository implements Repository {
     this.d.career_insights.push(...rows);
     this.save();
     return clone(rows);
+  }
+
+  async getCompanyResearch(companyName: string) {
+    const key = companyName.trim().toLowerCase();
+    const r = this.mine(this.d.company_research).find((x) => x.company_name.toLowerCase() === key);
+    return r ? clone(r) : null;
+  }
+
+  async saveCompanyResearch(companyName: string, notes: string) {
+    const key = companyName.trim().toLowerCase();
+    let r = this.mine(this.d.company_research).find((x) => x.company_name.toLowerCase() === key);
+    if (!r) {
+      r = { id: uuid(), user_id: this.userId, company_name: companyName.trim(), notes: "", summary: "", created_at: now(), updated_at: now() };
+      this.d.company_research.push(r);
+    }
+    applyPatch(r, { notes });
+    this.save();
+    return clone(r);
   }
 
   async incrementAiUsage(day: string) {
