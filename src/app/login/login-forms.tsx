@@ -31,9 +31,10 @@ export function EmailLoginForm() {
   const [state, action] = useActionState<LoginState, FormData>(signInWithEmail, {});
   if (state.sent) {
     return (
-      <p className="rounded-lg bg-success-soft px-3 py-3 text-sm">
-        If that address is allowed, a sign-in link is on its way. Check your inbox.
-      </p>
+      <div className="space-y-1 rounded-lg bg-success-soft px-3 py-3 text-sm">
+        <p>If that address is allowed, a sign-in link is on its way. Check your inbox.</p>
+        <p className="text-xs text-muted-foreground">Open the link in this same browser — for security, it only works where you requested it.</p>
+      </div>
     );
   }
   return (

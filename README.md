@@ -168,7 +168,7 @@ Done: Phase 1 (core workflow) and Phase 2 (relationship intelligence: timeline, 
 
 Next:
 
-- Production deployment of the private app (Supabase project + Anthropic key), so real data lives in Postgres instead of a local file.
+- Optional Claude API key in production (the private app currently runs on the free offline templates).
 - AI conversation practice: rehearse a coffee chat with a simulated version of the contact, built only from their profile.
 - Optional email reminders (the follow-up model is channel-agnostic; this needs a scheduled job such as Vercel Cron).
 - Postgres full-text search for the knowledge base at larger scale (the `tsvector` indexes already exist).

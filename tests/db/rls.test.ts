@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -27,10 +27,11 @@ async function as<T>(userId: string | null, fn: () => Promise<T>): Promise<T> {
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(readFileSync(path.join(__dirname, "supabase-stub.sql"), "utf8"));
+  // Apply every migration in order, exactly as Supabase would.
   const migrations = path.join(__dirname, "../../supabase/migrations");
-  await db.exec(readFileSync(path.join(migrations, "20261012000000_init.sql"), "utf8"));
-  // Supabase grants table privileges to `authenticated` by default; RLS then filters rows.
-  await db.exec(`grant select, insert, update, delete on all tables in schema public to authenticated;`);
+  for (const file of readdirSync(migrations).filter((f) => f.endsWith(".sql")).sort()) {
+    await db.exec(readFileSync(path.join(migrations, file), "utf8"));
+  }
   await db.exec(`insert into auth.users (id, email) values ('${ALICE}', 'alice@example.com'), ('${BOB}', 'bob@example.com');`);
 });
 
@@ -86,6 +87,11 @@ describe("database ownership (RLS)", () => {
         db.query("insert into public.meetings (user_id, contact_id, title) values ($1, $2, 'x')", [BOB, aliceContact]),
       ),
     ).rejects.toThrow(/foreign key/i);
+  });
+
+  it("does not expose the sign-up trigger function over the API", async () => {
+    await expect(as(ALICE, () => db.query("select public.handle_new_user()"))).rejects.toThrow(/permission denied/i);
+    await expect(as(null, () => db.query("select public.handle_new_user()"))).rejects.toThrow(/permission denied/i);
   });
 
   it("gives anonymous visitors no access at all", async () => {

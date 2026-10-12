@@ -19,7 +19,7 @@ import { TASKS, type AITaskKind, type AITaskMap, type DraftMessageInput, type Ge
  * quotes text that exists in the input, so grounding checks pass honestly.
  */
 export class MockProvider implements AIProvider {
-  readonly label = "Demo templates (offline)";
+  readonly label = "Offline templates (no AI)";
   readonly offline = true;
 
   async run<K extends AITaskKind>(kind: K, input: AITaskMap[K]["input"]): Promise<AITaskMap[K]["output"]> {
