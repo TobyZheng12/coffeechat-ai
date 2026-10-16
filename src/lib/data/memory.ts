@@ -286,11 +286,16 @@ export class MemoryRepository implements Repository {
     return q ? clone(q) : null;
   }
 
-  async replaceGeneratedQuestions(meetingId: UUID, items: Parameters<Repository["replaceGeneratedQuestions"]>[1]) {
+  async replaceGeneratedQuestions(
+    meetingId: UUID,
+    items: Parameters<Repository["replaceGeneratedQuestions"]>[1],
+    opts: { includeEdited?: boolean } = {},
+  ) {
     await this.requireMeeting(meetingId);
-    const kept = this.mine(this.d.meeting_questions).filter((q) => q.meeting_id === meetingId && q.edited);
+    const replace = (q: MeetingQuestion) => opts.includeEdited || !q.edited;
+    const kept = this.mine(this.d.meeting_questions).filter((q) => q.meeting_id === meetingId && !replace(q));
     this.d.meeting_questions = this.d.meeting_questions.filter(
-      (q) => !(q.meeting_id === meetingId && q.user_id === this.userId && !q.edited),
+      (q) => !(q.meeting_id === meetingId && q.user_id === this.userId && replace(q)),
     );
     const start = kept.reduce((max, q) => Math.max(max, q.position + 1), 0);
     const rows: MeetingQuestion[] = items.map((it, i) => ({

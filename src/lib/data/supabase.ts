@@ -189,16 +189,19 @@ export class SupabaseRepository implements Repository {
     return (data as MeetingQuestion) ?? null;
   }
 
-  async replaceGeneratedQuestions(meetingId: UUID, items: Parameters<Repository["replaceGeneratedQuestions"]>[1]) {
+  async replaceGeneratedQuestions(
+    meetingId: UUID,
+    items: Parameters<Repository["replaceGeneratedQuestions"]>[1],
+    opts: { includeEdited?: boolean } = {},
+  ) {
     if (!(await this.getMeeting(meetingId))) throw new NotFoundError("Meeting");
     const existing = await this.listQuestions(meetingId);
-    const del = await this.table("meeting_questions")
-      .delete()
-      .eq("user_id", this.userId)
-      .eq("meeting_id", meetingId)
-      .eq("edited", false);
-    this.fail(del.error, "Questions");
-    const start = existing.filter((q) => q.edited).reduce((m, q) => Math.max(m, q.position + 1), 0);
+    let del = this.table("meeting_questions").delete().eq("user_id", this.userId).eq("meeting_id", meetingId);
+    if (!opts.includeEdited) del = del.eq("edited", false);
+    const { error: delError } = await del;
+    this.fail(delError, "Questions");
+    const kept = opts.includeEdited ? [] : existing.filter((q) => q.edited);
+    const start = kept.reduce((m, q) => Math.max(m, q.position + 1), 0);
     if (items.length) {
       const { error } = await this.table("meeting_questions").insert(
         items.map((it, i) => ({ ...it, meeting_id: meetingId, user_id: this.userId, position: start + i })),

@@ -10,6 +10,7 @@ import type {
   MessageTone,
   Profile,
 } from "@/lib/domain/types";
+import { normalizeProfile } from "@/lib/profile/normalize";
 import { MAX_NOTES_CHARS, untrusted } from "./safety";
 import { ContactAnalysisAI, DraftAI, KnowledgeAI, NotesAI, QuestionAI, ScriptAI } from "./schemas";
 
@@ -42,7 +43,7 @@ export interface GenerateScriptInput {
   profile: Profile;
   today: ISODate;
   contact: ContactSources & { analysis: ContactAnalysisRecord | null };
-  experiences: Pick<ContactExperience, "kind" | "organization" | "title" | "start_label" | "end_label">[];
+  experiences: Pick<ContactExperience, "kind" | "organization" | "title" | "start_label" | "end_label" | "description">[];
   durationMinutes: number;
   /** Summaries of earlier meetings with this person, for follow-up conversations. */
   priorMeetings: { date: ISODate; summary: string }[];
@@ -117,13 +118,20 @@ Ground rules:
 - The goal is real relationships, not transactions. Favor curiosity, specificity, and gratitude over self-promotion or asks.`;
 
 export function studentBlock(profile: Profile, today: ISODate): string {
+  // Verified facts from the shared normalizer — the same ones the offline templates use.
+  const np = normalizeProfile(profile);
+  const exps = np.experiences.map(
+    (e) => `${e.title || e.kind} at ${e.orgSpoken}${e.location ? ` (${e.location.split(",")[0]})` : ""}${e.period ? `, ${e.period}` : ""}`,
+  );
   const lines = [
-    `Name: ${profile.full_name || "(not set)"}${profile.preferred_name ? ` (goes by ${profile.preferred_name})` : ""}`,
-    profile.hometown && `From: ${profile.hometown}`,
-    (profile.school || profile.major) && `Studies: ${[profile.major, profile.school].filter(Boolean).join(" at ")}`,
-    profile.background && `Background: ${profile.background}`,
-    profile.interests.length > 0 && `Career interests: ${profile.interests.join(", ")}`,
-    profile.target_companies.length > 0 && `Companies of interest: ${profile.target_companies.join(", ")}`,
+    `Name: ${profile.full_name || "(not set)"}${np.name ? ` (goes by ${np.name.value})` : ""}`,
+    np.hometown && `From: ${np.hometown.value}`,
+    np.school && `School: ${np.school.value} (say “${np.school.spoken}”)`,
+    np.major && `Studies: ${np.major.value}${np.degree ? ` (${np.degree})` : ""}`,
+    exps.length > 0 && `Verified experience: ${exps.join("; ")}`,
+    np.interests.length > 0 && `Career interests: ${np.interests.map((i) => i.value).join(", ")}`,
+    profile.target_companies.length > 0 &&
+      `Companies the student is curious about (the student has NOT worked at these): ${profile.target_companies.join(", ")}`,
     profile.career_goals && `Goals for these conversations: ${profile.career_goals}`,
     profile.native_language &&
       `Languages: native ${profile.native_language}${profile.english_second_language ? "; English is a second language" : ""}`,
@@ -197,7 +205,7 @@ const generateScript: TaskSpec<"generate_script"> = {
 
 <student>
 ${studentBlock(i.profile, i.today)}
-${i.profile.intro_pitch ? `\nThe student's own intro (adapt lightly; keep their voice):\n${i.profile.intro_pitch}` : ""}
+${i.profile.intro_pitch ? `\nThe student's own spoken introduction (it will be used exactly as written; write self_intro identical to it):\n${i.profile.intro_pitch}` : ""}
 </student>
 
 ${contactSources(i.contact)}
@@ -227,7 +235,7 @@ ${scriptPlan(i.durationMinutes)}
 Structure:
 - objectives: exactly 3 short goals for this specific call.
 - greeting + why_connect: warm, personal, specific to this person (use the email thread if it explains why they agreed to talk).
-- self_intro: 20–30 seconds spoken (55–80 words), first person, relevant to this contact.
+- self_intro: 20–30 seconds spoken (45–65 words), first person: name (hometown optional), what and where they study in natural words, ONE verified experience most relevant to this contact, and what they hope to learn from this person. Use only the verified facts above; never copy pasted profile text, labels, or bullet lists.
 - questions: section "career_journey" (2), "deep_dive" (3–5, highly personalized), "career_advice" (2–3, tied to the student's goals and timeline), optionally 1 "closing" question. Then 3–4 extra questions with is_alternate=true for the question bank.
 - referral_question: include a natural "is there anyone else you think I should learn from" question ONLY if it fits this relationship; otherwise null.
 - closing_thanks and closing_reminder: short and natural.

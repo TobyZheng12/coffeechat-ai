@@ -63,7 +63,7 @@ export function ScriptViews({
           <Button variant="ghost" size="sm" onClick={() => setEditingText(true)}>
             <Pencil /> Edit opening
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setRegenOpen(true)}>
+          <Button variant="ghost" size="sm" onClick={() => setRegenOpen(true)} aria-label="Regenerate script">
             <RefreshCw /> Regenerate
           </Button>
         </div>
@@ -75,9 +75,30 @@ export function ScriptViews({
           <p className="script-text">{script.greeting}</p>
           <p className="script-text">{script.why_connect}</p>
         </ScriptBlock>
-        <ScriptBlock label="Your introduction · about 30 seconds">
-          <p className="script-text">{script.self_intro}</p>
+        <ScriptBlock
+          label={`Your introduction · about 30 seconds${
+            script.intro_origin === "yours" ? " · your own words" : script.edited_fields?.includes("self_intro") ? " · edited by you" : ""
+          }`}
+        >
+          <p className="script-text" data-testid="self-intro">
+            {script.self_intro}
+          </p>
+          {script.intro_origin !== "yours" && !script.edited_fields?.includes("self_intro") ? (
+            <p className="text-xs text-muted-foreground">
+              Built from your profile facts. Edit it here, or save your own in Profile → “My spoken introduction”.
+            </p>
+          ) : null}
         </ScriptBlock>
+        {script.review_notes?.length ? (
+          <div className="space-y-1 rounded-xl border border-warning/30 bg-warning-soft p-3 text-xs" role="note">
+            <p className="font-medium">Worth checking before the call</p>
+            <ul className="list-disc space-y-0.5 pl-4">
+              {script.review_notes.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         {script.transition_to_questions ? <p className="script-text text-muted-foreground italic">{script.transition_to_questions}</p> : null}
         {ORDER.map((section, si) => {
           const qs = main.filter((q) => q.section === section);
@@ -309,10 +330,11 @@ function RegenerateDialog({
   first?: boolean;
 }) {
   const [focus, setFocus] = useState("");
+  const [replaceEdited, setReplaceEdited] = useState(false);
   const [pending, start] = useTransition();
   const run = () =>
     start(async () => {
-      const r = await generateScriptAction(meetingId, focus);
+      const r = await generateScriptAction(meetingId, focus, replaceEdited);
       if (!r.ok) return void toast.error(r.error);
       toast.success("Script ready");
       onOpenChange(false);
@@ -325,9 +347,23 @@ function RegenerateDialog({
         </DialogHeader>
         <div className="space-y-3">
           {!first ? (
-            <p className="text-sm text-muted-foreground">
-              Questions you edited or added yourself are kept. Everything else is rewritten.
-            </p>
+            <>
+              <p className="text-sm text-muted-foreground">
+                Text and questions you edited or added yourself are kept. Everything else is rewritten.
+              </p>
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={replaceEdited}
+                  onChange={(e) => setReplaceEdited(e.target.checked)}
+                />
+                <span>
+                  Also replace my edits
+                  <span className="block text-xs text-muted-foreground">Your edited introduction, opening, and questions will be rewritten.</span>
+                </span>
+              </label>
+            </>
           ) : null}
           <Field label="Anything to focus on? (optional)" htmlFor="regen-focus">
             <Textarea id="regen-focus" rows={3} value={focus} onChange={(e) => setFocus(e.target.value)} />

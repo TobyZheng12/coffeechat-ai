@@ -86,6 +86,35 @@ See README §4. Files:
 
 Model: `claude-opus-5-5` (configurable via `AI_MODEL`). Thinking is adaptive (always on for this model). Effort is `high` for scripts and `medium` elsewhere.
 
+## Profile normalization → spoken text
+
+Your profile fields are **source material**; what gets read aloud is built from
+cleaned facts. `src/lib/profile/normalize.ts` (shared by every provider):
+
+- removes only known platform artifacts — “X logo” headings, “Show all/See more”,
+  “· Part-time”, “· Hybrid”, tenure like “· 3 mos”, bullet prefixes — and can
+  split a paste whose line breaks were lost at unambiguous LinkedIn boundaries;
+- separates title / employer / location / dates, drops legal suffixes
+  (“Caterpillar Inc.” → “Caterpillar”), trims a school's sub-unit
+  (“… University Marriott School of Business” → “… University”, spoken “BYU”
+  only for multi-word “<Name> <Name> University” forms), splits the degree from
+  the field (“BS Global Supply Chain Management”);
+- deduplicates interests into spoken topics (“strategy consulting” + “management
+  consulting” → “consulting”, “strategy”);
+- keeps the source text of every fact and returns warnings instead of guessing.
+
+`src/lib/profile/introduction.ts` composes a 45–65 word introduction (name,
+optional hometown, what/where you study, ONE experience most relevant to the
+contact, what you hope to learn) and provides `spokenTextIssues()`, a validator
+used after **any** provider: an introduction with artifacts, or one that copies
+your Background word for word, is replaced by the composed one and the script
+gets a review note. Your saved “My spoken introduction” always wins. Target
+companies are never treated as employers, and broad shared terms are reported
+as interests, not shared experience. Edited script text (`edited_fields`) and
+edited questions survive regeneration unless you choose “Also replace my edits”.
+
+Nothing here rewrites stored data; normalization happens at read time.
+
 ## Follow-up engine
 
 `src/lib/domain/followup-engine.ts` is a pure function. Input: meeting facts plus extracted signals, relationship strength, last outbound message, mission dates, and existing rule keys. Output: recommendations plus explanatory notes.

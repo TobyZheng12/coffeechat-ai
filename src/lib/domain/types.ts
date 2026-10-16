@@ -143,7 +143,25 @@ export interface MeetingScript {
   referral_question: string | null;
   closing_reminder: string;
   generated_by: string;
+  /** Text fields you edited by hand; regeneration keeps them unless you choose to replace them. */
+  edited_fields?: ScriptTextField[];
+  /** Where the introduction came from. */
+  intro_origin?: "yours" | "generated" | "fallback";
+  /** Things worth checking before the call (e.g. details we couldn't read safely). */
+  review_notes?: string[];
 }
+
+export const SCRIPT_TEXT_FIELDS = [
+  "greeting",
+  "why_connect",
+  "self_intro",
+  "transition_to_questions",
+  "closing_thanks",
+  "referral_question",
+  "closing_reminder",
+  "objectives",
+] as const;
+export type ScriptTextField = (typeof SCRIPT_TEXT_FIELDS)[number];
 
 export interface Meeting {
   id: UUID;

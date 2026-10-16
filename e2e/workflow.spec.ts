@@ -59,7 +59,7 @@ test("complete coffee chat workflow", async ({ page }) => {
   await expect(page).toHaveURL(/\/app\/meetings\/[0-9a-f-]+$/);
   await expect(page.getByRole("heading", { name: "Rina Sato" })).toBeVisible();
   await expect(page.getByText("Goals for this conversation")).toBeVisible();
-  await expect(page.getByText(/at Summit Advisory before Lakeview Foods/)).toBeVisible();
+  await expect(page.getByText(/You moved from Summit Advisory to Lakeview Foods/)).toBeVisible();
   const meetingUrl = page.url();
 
   // Cheat sheet & question bank views

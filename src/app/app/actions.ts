@@ -221,9 +221,12 @@ export async function scheduleMeetingAction(contactId: string, _prev: ActionResu
   redirect(`/app/meetings/${result.data.id}`);
 }
 
-export async function generateScriptAction(meetingId: string, focus: string): Promise<ActionResult> {
+export async function generateScriptAction(meetingId: string, focus: string, replaceEdited = false): Promise<ActionResult> {
   return run(async (ws) => {
-    await generateScript(ws, id.parse(meetingId), { focus: z.string().max(2000).parse(focus ?? "") });
+    await generateScript(ws, id.parse(meetingId), {
+      focus: z.string().max(2000).parse(focus ?? ""),
+      replaceEdited: z.boolean().parse(replaceEdited),
+    });
     return null;
   });
 }

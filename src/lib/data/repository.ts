@@ -61,8 +61,8 @@ export interface Repository {
 
   listQuestions(meetingId: UUID): Promise<MeetingQuestion[]>;
   getQuestion(id: UUID): Promise<MeetingQuestion | null>;
-  /** Replaces AI-generated questions; questions the user edited are kept. */
-  replaceGeneratedQuestions(meetingId: UUID, items: MeetingQuestionInput[]): Promise<MeetingQuestion[]>;
+  /** Replaces generated questions; questions the user edited or added are kept unless `includeEdited`. */
+  replaceGeneratedQuestions(meetingId: UUID, items: MeetingQuestionInput[], opts?: { includeEdited?: boolean }): Promise<MeetingQuestion[]>;
   addQuestion(meetingId: UUID, item: MeetingQuestionInput): Promise<MeetingQuestion | null>;
   updateQuestion(id: UUID, patch: Partial<Omit<MeetingQuestion, "id" | "user_id" | "meeting_id" | "created_at">>): Promise<MeetingQuestion | null>;
   deleteQuestion(id: UUID): Promise<boolean>;

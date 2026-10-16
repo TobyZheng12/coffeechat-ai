@@ -114,7 +114,7 @@ export function QuestionCard({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <PopoverTrigger nativeButton={false} render={<span className="sr-only" />}>Regenerate</PopoverTrigger>
+            <PopoverTrigger nativeButton={false} render={<span className="sr-only" />}>Regenerate this question</PopoverTrigger>
             <PopoverContent align="end" className="w-72 space-y-2">
               <p className="text-xs font-medium">Regenerate this question</p>
               <Input
