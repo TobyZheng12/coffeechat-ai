@@ -99,6 +99,11 @@ describe("regression: raw profile text in the spoken introduction", () => {
     expect(intro.text).toContain("This past summer, I did a procurement internship at Granite Machinery in Wuxi.");
   });
 
+  it("never keeps articles or verbs inside an extracted title", () => {
+    const np = normalizeProfile({ ...BASE, background: "I completed a procurement internship at Granite Machinery this summer." });
+    expect(np.experiences[0]).toMatchObject({ title: "procurement intern", field: "procurement", orgSpoken: "Granite Machinery" });
+  });
+
   it("names the student, says what they study, and avoids repeating thanks or their name", () => {
     const intro = introFor(FLAT_BACKGROUND);
     expect(intro.text.startsWith("I'm Jordan, originally from Hangzhou, China, and I study")).toBe(true);

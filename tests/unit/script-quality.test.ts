@@ -57,6 +57,8 @@ describe("script quality (offline templates)", () => {
     expect(overlap).toBeLessThan(0.5);
 
     // Sarah: real shared school + shared employer (from the student's Background), with evidence.
+    const sarahWhy = (await getMeetingView(ctx, sarah.meetingId)).meeting.script!.why_connect;
+    expect(sarahWhy).toBe("I wanted to talk with you because I was a procurement intern at Granite Machinery too, and I'd love to hear where your path went from there.");
     expect(a.join(" ")).toMatch(/You were at Granite Machinery before Northwind Consulting/);
     // Priya: her real move and her own words, asked about rather than assumed.
     expect(b.join(" ")).toMatch(/You moved from Harborview Advisory to Summit Apparel/);

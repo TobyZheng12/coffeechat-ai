@@ -320,8 +320,16 @@ export function parseSentenceExperiences(text: string): ProfileExperience[] {
     const asM = before.match(/\bas\s+an?\s+([A-Za-z][\w &-]+?)\s*$/i);
     const roleWord = before.match(ROLE_WORD);
     const kind: ExperienceKind = /intern/i.test(before) ? "internship" : /research/i.test(before) ? "research" : "job";
-    const title = asM ? asM[1] : internM ? `${internM[1]} intern` : roleWord ? roleWord[1] : "";
-    const field = internM ? internM[1].toLowerCase().split(/\s+/).filter((w) => !NON_FIELD.has(w)).join(" ") : fieldOf(title);
+    // "completed a procurement internship" → field "procurement" (articles and verbs dropped).
+    const internField = internM
+      ? internM[1]
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => !NON_FIELD.has(w) && !/^(?:my|did|completed|had|an?|the|summer|winter|spring|fall)$/.test(w))
+          .join(" ")
+      : "";
+    const title = asM ? asM[1] : internM ? (internField ? `${internField} intern` : "intern") : roleWord ? roleWord[1] : "";
+    const field = internM ? internField : fieldOf(title);
     const sm = s.match(SEASON);
     out.push({
       title,
